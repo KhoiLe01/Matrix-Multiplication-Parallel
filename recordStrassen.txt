@@ -1,0 +1,4 @@
+1800:
+Strassen: 166301ms
+Sequential: 18115.1ms
+

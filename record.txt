@@ -1,0 +1,31 @@
+Summa Parallel vs Naive Sequential vs Pipelined Summa:
+
+3000x3000
+Sequential: 101920 ms
+Pipelined summa 1: 108954 ms
+Pipelined summa 2: 109111 ms
+Parallel summa: 84661.9 ms
+
+2000x2000
+Naive: 26975.3 ms, 28213.6 ms, 28363.6 ms
+Summa: 24814.4 ms, 25934.1 ms, 25894,4 ms
+
+1800x1800
+Naive: 20115.4 ms, 19949.3 ms, 19519.6 ms
+Summa: 18874.9 ms, 18716.9 ms, 19003.3 ms
+
+Lower nxn size we expect a non-guarentee faster runtime for summa parallel:
+1700x1700
+Naive: 15936.9 ms, 16163.5 ms, 15346.2 ms 
+Summa: 15993.8 ms, 15770.7 ms, 15558.4 ms
+
+Small nxn size:
+100x100
+Naive: 3.15455 ms, 3.21293 ms, 14.1819 ms, 4.92729 ms, 5.11206 ms
+Summa: 3.78866 ms, 4.05362 ms, 8.61416 ms, 3.91192 ms, 4.3404 ms
+
+70x70
+Naive: 1.11177 ms, 1.13115 ms, 2.24301 ms, 3.12512 ms, 5.457 ms
+Summa: 1.42729 ms, 1.41832 ms, 1.47748 ms, 1.63442 ms, 7.52048 ms
+
+Smaller nxn will have more rare case when parallel algo runs faster due to overheads.
