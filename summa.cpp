@@ -114,6 +114,9 @@ struct summa
     pthread_mutex_t *lock;
 };
 
+// Struct for pipeline summa
+// {x|y}_data{n1}_{n2} indicates the x or y coordinate
+// of the data_ptr{n1} of the phase n2
 struct pipelinesumma
 {
     int id;
@@ -131,6 +134,10 @@ struct pipelinesumma
     int n;
     pthread_mutex_t *lock;
 };
+
+// Struct for improved pipeline summa
+// {x|y}_data{n1}_1 indicates the location to be updated on data_ptr{n1}
+// {x|y}_data{n1}_2 indicates the location to be worked on data_ptr{n1}
 
 struct pipelinesumma2
 {
@@ -216,6 +223,10 @@ int **parallel_summa(int **data_ptr, int **data_ptr2, int n)
 
 void *pipeline_mult(void *arg)
 {
+    /*
+    Pipeline matrix multiplication for each thread.
+    In this case, we are dividing it into 4 threads
+    */
     pipelinesumma *data = (pipelinesumma *)arg;
     int id = data->id;
     int *col = (int *)malloc(sizeof(int) * data->n * data->n);
@@ -269,6 +280,10 @@ void *pipeline_mult(void *arg)
 
 int **pipelined_summa(int **data_ptr, int **data_ptr2, int n)
 {
+    /*
+    Main function to spawn 4 threads and perform summa by
+    dividing into 4 blocks
+    */
     int **result = (int **)malloc(n * sizeof(int *));
     for (int i = 0; i < n; i++)
         result[i] = (int *)malloc(n * sizeof(int));
@@ -307,6 +322,11 @@ int **pipelined_summa(int **data_ptr, int **data_ptr2, int n)
 
 void *pipeline_mult2(void *arg)
 {
+    /*
+    Improved version of pipeline summa
+    Pipeline matrix multiplication for each thread.
+    In this case, we are dividing it into 8 threads
+    */
     pipelinesumma2 *data = (pipelinesumma2 *)arg;
     int id = data->id;
     int *col = (int *)malloc(sizeof(int) * data->n * data->n);
@@ -341,6 +361,10 @@ void *pipeline_mult2(void *arg)
 
 int **pipelined_summa2(int **data_ptr, int **data_ptr2, int n)
 {
+    /*
+    Main function to spawn 8 threads and perform summa by
+    dividing into 4 blocks
+    */
     int **result = (int **)malloc(n * sizeof(int *));
     for (int i = 0; i < n; i++)
         result[i] = (int *)malloc(n * sizeof(int));
@@ -364,8 +388,6 @@ int **pipelined_summa2(int **data_ptr, int **data_ptr2, int n)
             thread_info[k].y_data1_2 = (k % 2) * (n / 2);
             thread_info[k].x_data2_2 = (k / 2) * (n / 2);
             thread_info[k].y_data2_2 = (k % 2) * (n / 2);
-            // thread_info[k].data_ptr = getPartialMatrix(data_ptr, thread_info[k].x_data1_2, thread_info[k].y_data1_2, thread_info[k].x_data1_2+n/2, thread_info[k].y_data1_2+n/2);
-            // thread_info[k].data_ptr2 = getPartialMatrix(data_ptr2, thread_info[k].x_data2_2, thread_info[k].y_data2_2, thread_info[k].x_data2_2+n/2, thread_info[k].y_data2_2+n/2);
             thread_info[k].data_ptr = data_ptr;
             thread_info[k].data_ptr2 = data_ptr2;
             thread_info[k].n = n / 2; // Assume that n is divisible by 2
@@ -384,8 +406,6 @@ int **pipelined_summa2(int **data_ptr, int **data_ptr2, int n)
             thread_info[k].y_data1_2 = ((k - 4 + 1) % 2) * (n / 2);
             thread_info[k].x_data2_2 = ((k - 4 + 1) % 2) * (n / 2);
             thread_info[k].y_data2_2 = ((k - 4) % 2) * (n / 2);
-            // thread_info[k].data_ptr = getPartialMatrix(data_ptr, thread_info[k].x_data1_2, thread_info[k].y_data1_2, thread_info[k].x_data1_2+n/2, thread_info[k].y_data1_2+n/2);
-            // thread_info[k].data_ptr2 = getPartialMatrix(data_ptr2, thread_info[k].x_data2_2, thread_info[k].y_data2_2, thread_info[k].x_data2_2+n/2, thread_info[k].y_data2_2+n/2);
             thread_info[k].data_ptr = data_ptr;
             thread_info[k].data_ptr2 = data_ptr2;
             thread_info[k].n = n / 2; // Assume that n is divisible by 2
