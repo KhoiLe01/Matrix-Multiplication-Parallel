@@ -10,6 +10,14 @@
 
 int NUM_THREADS = 7;
 
+// Strassen's method of matrix multiplication only work on matrices
+// that has power-of-two size, so for any n, we have to find the
+// closest power-of-two ceiling of n.
+
+// n respresents the size of the matrix, while ceiling (the power-of-two ceiling of n)
+// represents the actual size of the matrix.
+
+// Struct to store matrix A, B, size and extended size
 typedef struct
 {
 	int **A;
@@ -18,6 +26,7 @@ typedef struct
 	int ceiling;
 } matrixMultStrassen;
 
+// Struct to store a matrix with additional info
 typedef struct
 {
 	int **A;
@@ -25,7 +34,7 @@ typedef struct
 	int ceiling;
 } matrixS;
 
-// Part 1
+// Naive method of multiplying matrices.
 int **naive_matrix_mult(int **data_ptr, int **data_ptr2, int n)
 {
 	int **matrix = (int **)malloc(n * sizeof(int *));
@@ -52,11 +61,20 @@ int **naive_matrix_mult(int **data_ptr, int **data_ptr2, int n)
 
 int ceil_log2(int n)
 {
+	/*
+	This function return the power-of-two ceiling of any
+	integer n.
+	*/
 	return (int)pow(2, ceil(log(n) / log(2)));
 }
 
 int **initMatrix(int n, int ceiling)
 {
+	/*
+	Init the matrix based on n and the power-of-twp ceiling
+	of n. Only the first nxn entries on the top left is randomly
+	initiated. Other entries are initiated as 0.
+	*/
 	int **matrix = (int **)malloc(ceiling * sizeof(int *));
 	for (int i = 0; i < ceiling; i++)
 	{
@@ -78,6 +96,9 @@ int **initMatrix(int n, int ceiling)
 
 int **initEmptyMatrix(int ceiling)
 {
+	/*
+	Init the whole empty matrix based on the ceiling
+	*/
 	int **matrix = (int **)malloc(ceiling * sizeof(int *));
 	for (int i = 0; i < ceiling; i++)
 	{
@@ -88,6 +109,9 @@ int **initEmptyMatrix(int ceiling)
 
 matrixMultStrassen *initMatrixMultStrassen(int n)
 {
+	/*
+	Init struct matrix MultStrassen based on matrix size n.
+	*/
 	int ceiling = ceil_log2(n);
 	matrixMultStrassen *M = (matrixMultStrassen *)malloc(sizeof(matrixMultStrassen));
 	M->A = initEmptyMatrix(ceiling);
@@ -99,6 +123,9 @@ matrixMultStrassen *initMatrixMultStrassen(int n)
 
 matrixS *initMatrixS(int n)
 {
+	/*
+	Init struct matrixS based on matrix size n
+	*/
 	int ceiling = ceil_log2(n);
 	matrixS *M = (matrixS *)malloc(sizeof(matrixS));
 	M->A = initEmptyMatrix(ceiling);
@@ -109,6 +136,9 @@ matrixS *initMatrixS(int n)
 
 void freeMatrix(int **matrix, int ceiling)
 {
+	/*
+	Free a 2d matrix
+	*/
 	for (int i = 0; i < ceiling; i++)
 	{
 		free(matrix[i]);
@@ -118,6 +148,9 @@ void freeMatrix(int **matrix, int ceiling)
 
 void freeMatrixMultStrassen(matrixMultStrassen *M, int ceiling)
 {
+	/*
+	Free the struct matrixMultStrassen
+	*/
 	freeMatrix(M->A, ceiling);
 	freeMatrix(M->B, ceiling);
 	free(M);
@@ -125,6 +158,9 @@ void freeMatrixMultStrassen(matrixMultStrassen *M, int ceiling)
 
 void printMatrix(int **matrix, int n)
 {
+	/*
+	Print the matrix of the original size
+	*/
 	for (int i = 0; i < n; i++)
 	{
 		for (int j = 0; j < n; j++)
@@ -137,6 +173,9 @@ void printMatrix(int **matrix, int n)
 
 int **addMatrix(int **matrix1, int **matrix2, int n, int ceiling)
 {
+	/*
+	Add two matrices: matrix1 + matrix2
+	*/
 	int **ans = initMatrix(n, ceiling);
 	for (int i = 0; i < n; i++)
 	{
@@ -150,6 +189,9 @@ int **addMatrix(int **matrix1, int **matrix2, int n, int ceiling)
 
 int **subtractMatrix(int **matrix1, int **matrix2, int n, int ceiling)
 {
+	/*
+	Subtract two matrices: matrix1 - matrix2
+	*/
 	int **ans = initMatrix(n, ceiling);
 	for (int i = 0; i < n; i++)
 	{
@@ -163,6 +205,10 @@ int **subtractMatrix(int **matrix1, int **matrix2, int n, int ceiling)
 
 int **getPartialMatrix(int **matrix, int topleft_row, int topleft_col, int bottomright_row, int bottomright_col)
 {
+	/*
+	Get only a part of the matrix. The partial matrix is decided by
+	the topleft location and bottomright location
+	*/
 	int n = bottomright_col - topleft_col;
 	int ceiling = ceil_log2(n);
 	int **ans = initMatrix(n, ceiling);
@@ -178,6 +224,9 @@ int **getPartialMatrix(int **matrix, int topleft_row, int topleft_col, int botto
 
 void copyMatrix(int **source, int size, int **destination, int starting_row, int starting_col)
 {
+	/*
+	Copy a submatrix from source to destination
+	*/
 	for (int i = 0; i < size; i++)
 	{
 		for (int j = 0; j < size; j++)
@@ -189,6 +238,9 @@ void copyMatrix(int **source, int size, int **destination, int starting_row, int
 
 int **deepCopyMatrix(int **source, int n, int ceiling)
 {
+	/*
+	Create a deep copy matrix of the source matrix
+	*/
 	int **ans = initMatrix(n, ceiling);
 	for (int i = 0; i < n; i++)
 	{
@@ -202,6 +254,10 @@ int **deepCopyMatrix(int **source, int n, int ceiling)
 
 void *recursiveMul(void *mat)
 {
+	/*
+	Function for each thread to run to recursively multiply
+	matrices using Strassen method
+	*/
 	matrixMultStrassen *M = (matrixMultStrassen *)mat;
 	matrixS *c = initMatrixS(M->n);
 
@@ -216,6 +272,7 @@ void *recursiveMul(void *mat)
 		int ceilSubSize = ceilN / 2;
 		int subSize = ceilSubSize;
 
+		// Divide the matrix A and B into four sub-matrices
 		int **a11 = getPartialMatrix(M->A, 0, 0, ceilSubSize, ceilSubSize);
 		int **a12 = getPartialMatrix(M->A, 0, ceilSubSize, ceilSubSize, ceilN);
 		int **a21 = getPartialMatrix(M->A, ceilSubSize, 0, ceilN, ceilSubSize);
@@ -225,6 +282,7 @@ void *recursiveMul(void *mat)
 		int **b21 = getPartialMatrix(M->B, ceilSubSize, 0, ceilN, ceilSubSize);
 		int **b22 = getPartialMatrix(M->B, ceilSubSize, ceilSubSize, ceilN, ceilN);
 
+		// Assign tasks for recursion
 		matrixMultStrassen *P1 = initMatrixMultStrassen(ceilSubSize);
 		P1->A = getPartialMatrix(M->A, 0, 0, ceilSubSize, ceilSubSize); // a11
 		P1->B = subtractMatrix(b12, b22, subSize, ceilSubSize);
@@ -253,6 +311,7 @@ void *recursiveMul(void *mat)
 		P7->A = subtractMatrix(a11, a21, subSize, ceilSubSize);
 		P7->B = addMatrix(b11, b12, subSize, ceilSubSize);
 
+		// Perform the multiplication recursively
 		int **p1 = ((matrixS *)recursiveMul((void *)P1))->A;
 		int **p2 = ((matrixS *)recursiveMul((void *)P2))->A;
 		int **p3 = ((matrixS *)recursiveMul((void *)P3))->A;
@@ -261,6 +320,7 @@ void *recursiveMul(void *mat)
 		int **p6 = ((matrixS *)recursiveMul((void *)P6))->A;
 		int **p7 = ((matrixS *)recursiveMul((void *)P7))->A;
 
+		// Free the allocated structures/arrays
 		freeMatrixMultStrassen(P1, ceilSubSize);
 		freeMatrixMultStrassen(P2, ceilSubSize);
 		freeMatrixMultStrassen(P3, ceilSubSize);
@@ -278,6 +338,8 @@ void *recursiveMul(void *mat)
 		freeMatrix(b21, ceilSubSize);
 		freeMatrix(b22, ceilSubSize);
 
+		// Combined the above result to calculate the parts
+		// of resulting matrix C.
 		int **c11 = addMatrix(p5, p4, subSize, ceilSubSize);
 		c11 = subtractMatrix(c11, p2, subSize, ceilSubSize);
 		c11 = addMatrix(c11, p6, subSize, ceilSubSize);
@@ -312,6 +374,9 @@ void *recursiveMul(void *mat)
 
 int **multiplyStrassen(matrixMultStrassen *M)
 {
+	/*
+	Function to spawn threads to perform Strassen's method of matrix multiplication
+	*/
 	pthread_t tid[NUM_THREADS];
 	int n = M->n;
 	int ceilN = M->ceiling;
@@ -335,6 +400,7 @@ int **multiplyStrassen(matrixMultStrassen *M)
 	int **p6;
 	int **p7;
 
+	// Divide the matrix A and B into four sub-matrices
 	int **a11 = getPartialMatrix(M->A, 0, 0, ceilSubSize, ceilSubSize);
 	int **a12 = getPartialMatrix(M->A, 0, ceilSubSize, ceilSubSize, ceilN);
 	int **a21 = getPartialMatrix(M->A, ceilSubSize, 0, ceilN, ceilSubSize);
@@ -344,6 +410,7 @@ int **multiplyStrassen(matrixMultStrassen *M)
 	int **b21 = getPartialMatrix(M->B, ceilSubSize, 0, ceilN, ceilSubSize);
 	int **b22 = getPartialMatrix(M->B, ceilSubSize, ceilSubSize, ceilN, ceilN);
 
+	// Assign tasks for each thread
 	matrixMultStrassen *P1 = initMatrixMultStrassen(ceilSubSize);
 	P1->A = deepCopyMatrix(a11, subSize, ceilSubSize);
 	P1->B = subtractMatrix(b12, b22, subSize, ceilSubSize);
@@ -372,6 +439,7 @@ int **multiplyStrassen(matrixMultStrassen *M)
 	P7->A = subtractMatrix(a11, a21, subSize, ceilSubSize);
 	P7->B = addMatrix(b11, b12, subSize, ceilSubSize);
 
+	// Perform the multiplication in parallel by spawning 7 threads
 	pthread_create(&tid[0], NULL, recursiveMul, (void *)P1);
 	pthread_create(&tid[1], NULL, recursiveMul, (void *)P2);
 	pthread_create(&tid[2], NULL, recursiveMul, (void *)P3);
@@ -380,6 +448,7 @@ int **multiplyStrassen(matrixMultStrassen *M)
 	pthread_create(&tid[5], NULL, recursiveMul, (void *)P6);
 	pthread_create(&tid[6], NULL, recursiveMul, (void *)P7);
 
+	// Join the threads and collect the results
 	pthread_join(tid[0], &temp1);
 	p1 = ((matrixS *)temp1)->A;
 
@@ -401,6 +470,8 @@ int **multiplyStrassen(matrixMultStrassen *M)
 	pthread_join(tid[6], &temp7);
 	p7 = ((matrixS *)temp7)->A;
 
+	// Combined the above result to calculate the parts
+	// of resulting matrix C.
 	int **c11 = addMatrix(p5, p4, subSize, ceilSubSize);
 	c11 = subtractMatrix(c11, p2, subSize, ceilSubSize);
 	c11 = addMatrix(c11, p6, subSize, ceilSubSize);
@@ -451,14 +522,20 @@ int **multiplyStrassen(matrixMultStrassen *M)
 
 int main()
 {
-	int n = 100;
+	// Declare info about the matrices
+	int n = 7;
 	int ceiling = ceil_log2(n);
+
+	// Initiate the time
 	struct timespec begin_seq, end_seq;
 	struct timespec begin_strassen, end_strassen;
+
+	// Init struct to perform matrix multiplication
 	matrixMultStrassen *M = initMatrixMultStrassen(n);
 	M->A = initMatrix(n, ceiling);
 	M->B = initMatrix(n, ceiling);
 
+	// Start Strassen matrix multiplcation
 	clock_gettime(CLOCK_REALTIME, &begin_strassen);
 	int **res = multiplyStrassen(M);
 	clock_gettime(CLOCK_REALTIME, &end_strassen);
@@ -469,6 +546,7 @@ int main()
 	std::cout << "Strassen: ";
 	std::cout << elapsed_strassen << "ms" << std::endl;
 
+	// Start sequential matrix multiplication.
 	clock_gettime(CLOCK_REALTIME, &begin_seq);
 	int **res_seq = naive_matrix_mult(M->A, M->B, M->n);
 	clock_gettime(CLOCK_REALTIME, &end_seq);
@@ -479,8 +557,8 @@ int main()
 	std::cout << "Sequential: ";
 	std::cout << elapsed_seq << "ms" << std::endl;
 
-	// printMatrix(res, n);
-	// printMatrix(res_seq, n);
+	printMatrix(res, n);
+	printMatrix(res_seq, n);
 	freeMatrix(res, ceiling);
 	freeMatrix(res_seq, n);
 	freeMatrixMultStrassen(M, ceiling);

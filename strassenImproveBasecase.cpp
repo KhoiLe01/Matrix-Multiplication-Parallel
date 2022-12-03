@@ -8,6 +8,10 @@
 #include <sys/syscall.h>
 #define gettid() syscall(SYS_gettid)
 
+// Improve the Strassen method by improving the basecase
+// by using sequential matrix multiplication when the matrix
+// size is <= 16
+
 int NUM_THREADS = 7;
 
 typedef struct
@@ -257,6 +261,7 @@ void *recursiveMul(void *mat)
     matrixMultStrassen *M = (matrixMultStrassen *)mat;
     matrixS *c = initMatrixS(M->n);
 
+    // Improve base case
     if (M->n <= 16)
     {
         c->A = naive_matrix_mult(M->A, M->B, M->ceiling);

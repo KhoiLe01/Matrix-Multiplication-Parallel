@@ -8,6 +8,9 @@
 #include <sys/syscall.h>
 #define gettid() syscall(SYS_gettid)
 
+// Improve the Strassen Matrix multiplication by reducing
+// the number of allocation of matrices
+
 int NUM_THREADS = 7;
 
 typedef struct
@@ -200,6 +203,9 @@ int **getPartialMatrix(int **matrix, int topleft_row, int topleft_col, int botto
 
 int **getPartialMatrixSubtract(int **matrix, int topleft_row1, int topleft_col1, int bottomright_row1, int bottomright_col1, int topleft_row2, int topleft_col2, int bottomright_row2, int bottomright_col2)
 {
+    /*
+    Perform matrix addition on sub-matrices of the matrix
+    */
     int n = bottomright_col1 - topleft_col1;
     int ceiling = ceil_log2(n);
     int **ans = initMatrix(n, ceiling);
@@ -215,6 +221,9 @@ int **getPartialMatrixSubtract(int **matrix, int topleft_row1, int topleft_col1,
 
 int **getPartialMatrixAdd(int **matrix, int topleft_row1, int topleft_col1, int bottomright_row1, int bottomright_col1, int topleft_row2, int topleft_col2, int bottomright_row2, int bottomright_col2)
 {
+    /*
+    Perform matrix subtraction on sub-matrices of the matrix
+    */
     int n = bottomright_col1 - topleft_col1;
     int ceiling = ceil_log2(n);
     int **ans = initMatrix(n, ceiling);
@@ -268,6 +277,8 @@ void *recursiveMul(void *mat)
         int ceilSubSize = ceilN / 2;
         int subSize = ceilSubSize;
 
+        // Main difference: Instead of allocating for each sub-matrice of A and B
+        // we directly perform calculation on the original matrices A and B
         matrixMultStrassen *P1 = initMatrixMultStrassen(ceilSubSize);
         // a11
         P1->A = getPartialMatrix(M->A, 0, 0, ceilSubSize, ceilSubSize);
@@ -383,6 +394,8 @@ int **multiplyStrassen(matrixMultStrassen *M)
     int **p6;
     int **p7;
 
+    // Main difference: Instead of allocating for each sub-matrice of A and B
+    // we directly perform calculation on the original matrices A and B
     matrixMultStrassen *P1 = initMatrixMultStrassen(ceilSubSize);
     // a11
     P1->A = getPartialMatrix(M->A, 0, 0, ceilSubSize, ceilSubSize);
