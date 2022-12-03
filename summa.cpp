@@ -243,6 +243,7 @@ void *pipeline_mult(void *arg)
             row[k * data->n + j] = data->data_ptr2[data->x_data2_1 + k][data->y_data2_1 + j];
         }
         pthread_mutex_lock(data->lock);
+#pragma omp parallel for
         for (int i = 0; i < data->n; i++)
         {
             for (int j = 0; j < data->n; j++)
